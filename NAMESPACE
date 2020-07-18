@@ -2,4 +2,4 @@
 
 export(dataGen)
 export(dmlRF)
-export(dmlRF2)
+export(dmlRFapply)

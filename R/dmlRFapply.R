@@ -6,6 +6,10 @@
 #' variable, how many splits to perform, and whether to summarize
 #' the results or return all the output data in a list instead. The user
 #' also has a choice of how theta is calculated.
+#' 
+#' dmlRFapply differs from dmlRF in that the former fits the models to data
+#' splits using the apply method while the latter does so by looping through the
+#' splits.
 #'
 #' @param data a data frame with depenent, treatment, and control variables.
 #' @param dep the column number of the dependent variable.
@@ -21,12 +25,12 @@
 #' dmlRF(data, dep = 1, treat = 2, splits = 3, DML = "FWL")
 
 # define dml estimating function -----------------------------------------------
-dmlRF2 <- function(data    = NULL,    # a data frame
-                  dep     = NULL,    # col index of dependent variable
-                  treat   = NULL,    # col index of treatment variable
-                  compile = TRUE,    # summarize results as output?
-                  splits  = 2,       # how many sample splits to do
-                  DML     = "DML1"){ # which DML estimation to calculate
+dmlRFapply <- function(data    = NULL,    # a data frame
+                       dep     = NULL,    # col index of dependent variable
+                       treat   = NULL,    # col index of treatment variable
+                       compile = TRUE,    # summarize results as output?
+                       splits  = 2,       # how many sample splits to do
+                       DML     = "DML1"){ # which DML estimation to calculate
   
   # initialize split and receiver objects
   N      <- nrow(data)

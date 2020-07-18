@@ -7,6 +7,9 @@
 #' the results or return all the output data in a list instead. The user
 #' also has a choice of how theta is calculated.
 #'
+#' dmlRF differs from dmlRFapply in that the former fits the models to data
+#' splits using loops while the latter does so by the apply method.
+#'
 #' @param data a data frame with depenent, treatment, and control variables.
 #' @param dep the column number of the dependent variable.
 #' @param treat the column number of the treatment variable.

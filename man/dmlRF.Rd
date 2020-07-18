@@ -39,6 +39,10 @@ variable, how many splits to perform, and whether to summarize
 the results or return all the output data in a list instead. The user
 also has a choice of how theta is calculated.
 }
+\details{
+dmlRF differs from dmlRFapply in that the former fits the models to data
+splits using loops while the latter does so by the apply method.
+}
 \examples{
 dmlRF(data, dep = 1, treat = 2, splits = 3, DML = "FWL")
 }
