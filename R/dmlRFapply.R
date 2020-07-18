@@ -21,30 +21,25 @@
 #' dmlRF(data, dep = 1, treat = 2, splits = 3, DML = "FWL")
 
 # define dml estimating function -----------------------------------------------
-dmlRF <- function(data    = NULL,    # a data frame
+dmlRF2 <- function(data    = NULL,    # a data frame
                   dep     = NULL,    # col index of dependent variable
                   treat   = NULL,    # col index of treatment variable
                   compile = TRUE,    # summarize results as output?
                   splits  = 2,       # how many sample splits to do
                   DML     = "DML1"){ # which DML estimation to calculate
-
+  
   # initialize split and receiver objects
   N      <- nrow(data)
   I      <- list()
   I_last <- 1:N
   I_c    <- 1:N
   n_size <- round(N/splits)
-  W      <- c()
-  V      <- c()
-  D      <- c()
-  thetas <- c()
-  scores <- c()
-
+  
   # split the dataframe to matrices
   y = as.matrix(data[dep])
   d = as.matrix(data[treat])
   z = as.matrix(data[setdiff(1:ncol(data), c(dep, treat))])
-
+  
   # perform the splits
   for(i in 1:splits){
     if(i < splits){
@@ -54,25 +49,26 @@ dmlRF <- function(data    = NULL,    # a data frame
       I[[i]] <- I_last
     }
   }
-
+  
   # iterative estimation of each kth sub-theta
-  for(k in 1:splits){
+  fitMod <- function(j){
+    
     # fit the nuisance functions
-    g_hat <- randomForest::randomForest(z[setdiff(I_c, I[[k]]), ],
-                                        y[setdiff(I_c, I[[k]]), ],
+    g_hat <- randomForest::randomForest(z[setdiff(I_c, j), ],
+                                        y[setdiff(I_c, j), ],
                                         maxnodes = ncol(z))
-    m_hat <- randomForest::randomForest(z[setdiff(I_c, I[[k]]), ],
-                                        d[setdiff(I_c, I[[k]]), ],
+    m_hat <- randomForest::randomForest(z[setdiff(I_c, j), ],
+                                        d[setdiff(I_c, j), ],
                                         maxnodes = ncol(z))
-
+    
     # residualize the dep. and treatment vars using nuisance functions
-    w <- y[I[[k]], ] - predict(g_hat, data.frame(z[I[[k]], ]))
-    v <- d[I[[k]], ] - predict(m_hat, data.frame(z[I[[k]], ]))
-
+    w <- y[j, ] - predict(g_hat, data.frame(z[j, ]))
+    v <- d[j, ] - predict(m_hat, data.frame(z[j, ]))
+    
     # compute the treatment coefficient and score function
     if(DML == "DML1"){
-      theta <- mean(v * w)/mean(v * d[I[[k]], ])
-      score <- (w - (d[I[[k]], ]*theta))*(v)
+      theta <- mean(v * w)/mean(v * d[j])
+      score <- (w - (d[j]*theta))*(v)
     } else if(DML == "DML2"){
       theta <- mean(v * w)/mean(v^2)
       score <- (w - (v*theta))*(v)
@@ -80,34 +76,35 @@ dmlRF <- function(data    = NULL,    # a data frame
       theta <- coef(lm(w ~ v + 0))[[1]]
       score <- resid(lm(w ~ v))
     }
-
-    # running append of output vectors
-    W      <- c(W, w)
-    V      <- c(V, v)
-    D      <- c(D, d[I[[k]], ])
-    scores <- c(scores, score)
-    thetas <- c(thetas, theta)
+    
+    # place outcomes into a data frame
+    return(data.frame(W = w,
+                      V = v,
+                      D = d[j],
+                      resid = score,
+                      Theta = theta,
+                      index = j))
   }
-
-  # store all relevant objects in list as output option
-  lgList        <- list()
-  lgList$splits <- I
-  lgList$thetas <- thetas
-  lgList$W      <- W
-  lgList$V      <- V
-  lgList$D      <- D
-  lgList$scores <- scores
-
+  
+  # fit the models and get output objects
+  lgList = lapply(I, fitMod)
+  
+  # specify reciever data frame
+  out <- data.frame()
+  
+  # unpack the list into the output data frame
+  for(i in 1:length(lgList)){
+    out <- rbind(out, lgList[[i]])
+  }
+  
   # create the summary information as output option
-  theta <- mean(thetas)
-  se    <- sqrt(mean(V^2*(W - V*theta)^2)/mean(V^2)^2)/sqrt(N)
-  t     <- theta/se
-  p     <- 2*pt(-abs(t), df = N - 1)
-
+  theta <- mean(out$Theta)
+  se    <- sqrt(mean(out$V^2*(out$W - out$V*theta)^2)/mean(out$V^2)^2)/sqrt(N)
+  
   if(compile){
-    return(c("theta" = theta,
-             "std.err" = se))
-  }else{
+    return(c("theta" = theta, "std.err" = se))
+  } else {
     return(lgList)
   }
 }
+
