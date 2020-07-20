@@ -2,7 +2,7 @@
 % Please edit documentation in R/dmlRF.R
 \name{dmlRF}
 \alias{dmlRF}
-\title{Double Machine Learning for Esitmating Treatment Effects}
+\title{Double Machine Learning for Estimating Treatment Effects}
 \usage{
 dmlRF(
   data = NULL,
@@ -14,7 +14,7 @@ dmlRF(
 )
 }
 \arguments{
-\item{data}{a data frame with depenent, treatment, and control variables.}
+\item{data}{a data frame with dependent, treatment, and control variables.}
 
 \item{dep}{the column number of the dependent variable.}
 
@@ -32,16 +32,17 @@ dmlRF(
 A named vector or list
 }
 \description{
-This function performs the estimation of the debiased estimator
-as outlined in Chernozhukov et al (2016). It requres the user to
-provide a data frame, column indexes for the depenent and treatment
-variable, how many splits to perform, and whether to summarize
-the results or return all the output data in a list instead. The user
-also has a choice of how theta is calculated.
+One of several functions in this package that performs the estimation of the
+debiased estimator as outlined in Chernozhukov et al (2016). It requires the
+user to provide a data frame, column indexes for the dependent and treatment
+variable, how many splits to perform, and whether to summarize the results or
+return all the output data in a list instead. The user also has a choice of
+how theta is calculated.
 }
 \details{
-dmlRF differs from dmlRFapply in that the former fits the models to data
-splits using loops while the latter does so by the apply method.
+dmlRF specifically does this using the random forest from the randomForest
+package as the foundational ML model for fitting the nuisance function in
+cross-splitting.
 }
 \examples{
 dmlRF(data, dep = 1, treat = 2, splits = 3, DML = "FWL")
